@@ -36,7 +36,10 @@ export default class Main extends Component {
       } else if (message.charAt(i) === "("){
         //find the end parenthesis, make sure it's not more than 15 chars
         if (message.indexOf(")",i+1) > 0 && message.indexOf(")", i+1) < i+17){
-          emoticons.push(message.substring(i+1,message.indexOf(")",i+1)))
+            //make sure all alphanumeric in substring
+            if (message.substring(i+1,message.indexOf(")",i+1)).match(/^[a-zA-Z0-9]*$/)){
+                emoticons.push(message.substring(i+1,message.indexOf(")",i+1)))
+            }
         }
       } else if (message.substring(i, i+4) === "http"){
         let url = message.substring(i).split(" ")[0];
