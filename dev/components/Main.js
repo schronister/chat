@@ -6,16 +6,21 @@ import request from 'request';
 export default class Main extends Component {
    constructor(props) {
     super(props);
-
     this.sendChat = this.sendChat.bind(this);
     this.handleChange = this.handleChange.bind(this);
-
     this.state = {message:"", parsedMessage:null}
   }
 
+  componentDidMount(){
+    //allow return key to send chat
+    document.getElementById('inputBox').onkeydown = function(e){
+     if(e.keyCode == 13){
+       this.sendChat();
+     }
+    }.bind(this);
+  }
 
   sendChat(){
-    console.log(this.state.message)
     let mentions = [];
     let emoticons = [];
     let links = [];
@@ -23,7 +28,11 @@ export default class Main extends Component {
     //parse mentions
     for (var i = 0; i < message.length; i++){
       if(message.charAt(i) === "@"){
-        mentions.push(message.substring(i+1).split(" ")[0])
+        //don't get empty @
+        if (message.substring(i+1).split(/\b/)[0].length >0){
+            //split on the non-word character, grab first index
+            mentions.push(message.substring(i+1).split(/\b/)[0])
+        }
       } else if (message.charAt(i) === "("){
         //find the end parenthesis, make sure it's not more than 15 chars
         if (message.indexOf(")",i+1) > 0 && message.indexOf(")", i+1) < i+17){
@@ -40,19 +49,15 @@ export default class Main extends Component {
               url: url
             },
           }).then(function(response){
-            console.log('got this', response)
             pageTitle = response.data;
             links.push({url:url,title:pageTitle});
             let current = this.state.parsedMessage;
             current.links = links;
-            this.setState({parsedMessage:current})
-
+            this.setState({parsedMessage:current, message:""})
           }.bind(this))
-       
-
       }
     }
-    this.setState({parsedMessage:{mentions:mentions, emoticons:emoticons, links:links}})
+    this.setState({parsedMessage:{mentions:mentions, emoticons:emoticons, links:links}, message:""})
   }
 
 
@@ -67,19 +72,24 @@ export default class Main extends Component {
       <div className="App">
         <div className="container">
           <div className="renderWindow">
-          {this.state.parsedMessage &&
-            <div>
-            <h3>Message details:</h3>
+          {this.state.parsedMessage?
+            <div style={{textAlign:'center', marginTop:'50px'}}>
+            <h4>Message details:</h4>
             {JSON.stringify(this.state.parsedMessage)}
+            </div>
+            :
+            <div style={{textAlign:'center', marginTop:'50px'}}>
+            <h4>Welcome to HippieChat*</h4>
+            <p style={{fontSize:'0.6em'}}>*No hippies were harmed in the creation of this app</p>
             </div>
           }
           </div>
 
           <div className="chatBox">
             <div className="inputBoxContainer">
-            <input id="inputBox"  onChange={this.handleChange}  type="text" placeholder="Enter your message here..."/>
+            <input id="inputBox" value={this.state.message}  onChange={this.handleChange}  type="text" placeholder="Enter your message here..."/>
             </div>
-            <button className="submitButton"value={this.state.message} onClick={this.sendChat}>Send</button>
+            <button className="submitButton waves-effect waves-light btn" onClick={this.sendChat}>Send</button>
           </div>
         </div>
       </div>
